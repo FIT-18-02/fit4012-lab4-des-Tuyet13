@@ -1,15 +1,175 @@
-## 3. Input / Đầu vào
-* **Chế độ (Mode)**: Chương trình nhận một số nguyên từ 1 đến 4 để chọn chức năng: 1 (DES Encrypt), 2 (DES Decrypt), 3 (3DES Encrypt), 4 (3DES Decrypt).
-* **Plaintext/Ciphertext**: Nhập dưới dạng chuỗi nhị phân (0 và 1) từ bàn phím. Chương trình hỗ trợ chuỗi có độ dài bất kỳ.
-* **Khóa (Key)**: 
-    * Với DES: Nhập 1 chuỗi nhị phân 64-bit.
-    * Với TripleDES: Nhập lần lượt 3 chuỗi nhị phân K1, K2, K3 (mỗi khóa 64-bit).
+# DES / TripleDES Implementation – FIT4012 Lab 4
 
-## 4. Output / Đầu ra
-* **Kết quả**: In ra chuỗi nhị phân hoàn chỉnh sau khi đã thực hiện mã hóa hoặc giải mã.
-* **Chi tiết**: Kết quả hiển thị rõ ràng để bộ chấm tự động (CI) có thể đối chiếu.
+## 1. How to run
 
-## 5. Padding đang dùng
-* **Cơ chế**: Zero Padding.
-* **Cách thực hiện**: Nếu khối dữ liệu cuối cùng không đủ 64-bit, chương trình sẽ tự động bù thêm các ký tự '0' vào cuối cho đến khi đủ độ dài 64-bit.
-* **Hạn chế**: Zero padding có thể gây nhầm lẫn nếu dữ liệu gốc thực tế cũng kết thúc bằng các số 0.
+### Compile
+
+```bash
+g++ -std=c++17 -Wall -Wextra -pedantic des.cpp -o des
+```
+
+### Run
+
+```bash
+./des
+```
+
+---
+
+## 2. Input / Đầu vào
+
+Chương trình nhận dữ liệu từ **stdin** theo chế độ (mode):
+
+```
+1 = DES encrypt  
+2 = DES decrypt  
+3 = TripleDES encrypt  
+4 = TripleDES decrypt  
+```
+
+### Mode 1: DES encrypt
+
+Nhập:
+
+* plaintext (chuỗi nhị phân, có thể dài hơn 64 bit)
+* key (64 bit)
+
+Chương trình sẽ:
+
+* chia plaintext thành các block 64 bit
+* block cuối nếu thiếu sẽ được **zero padding**
+
+---
+
+### Mode 2: DES decrypt
+
+Nhập:
+
+* ciphertext (chuỗi nhị phân)
+* key (64 bit)
+
+Chương trình sẽ:
+
+* giải mã bằng DES
+* sử dụng round keys đảo ngược
+
+---
+
+### Mode 3: TripleDES encrypt
+
+Nhập:
+
+* plaintext (64 bit)
+* K1, K2, K3 (mỗi key 64 bit)
+
+Thực hiện:
+
+```
+Ciphertext = E(K3, D(K2, E(K1, Plaintext)))
+```
+
+---
+
+### Mode 4: TripleDES decrypt
+
+Nhập:
+
+* ciphertext (64 bit)
+* K1, K2, K3
+
+Thực hiện:
+
+```
+Plaintext = D(K1, E(K2, D(K3, Ciphertext)))
+```
+
+---
+
+## 3. Output / Đầu ra
+
+* In ra kết quả cuối cùng (ciphertext hoặc plaintext)
+* Dạng chuỗi nhị phân
+* Có thể in thêm thông tin trung gian nhưng kết quả cuối phải rõ ràng
+
+---
+
+## 4. Padding
+
+* Sử dụng **zero padding**
+* Nếu block cuối < 64 bit → thêm '0' cho đủ
+
+Ví dụ:
+
+```
+Input: 10101
+→ 101010000000000000... (đủ 64 bit)
+```
+
+### Hạn chế:
+
+* Không phân biệt được đâu là dữ liệu thật và đâu là padding
+* Không an toàn trong hệ thống thực tế
+
+---
+
+## 5. Cryptography Notes
+
+### IV / Nonce
+
+IV (Initialization Vector) hoặc nonce cần **duy nhất (unique)** cho mỗi lần mã hóa.
+Nếu tái sử dụng IV/nonce, attacker có thể suy ra thông tin từ ciphertext.
+
+---
+
+### Padding
+
+Padding cần thiết khi dùng block cipher như DES (CBC mode) vì dữ liệu phải chia hết block.
+Nếu xử lý padding sai có thể dẫn đến lỗi hoặc bị khai thác (padding oracle attack).
+
+---
+
+### CBC / CTR / GCM (cơ bản)
+
+* **CBC**: dùng IV, an toàn hơn ECB nhưng cần padding
+* **CTR**: biến block cipher thành stream cipher, không cần padding
+* **GCM**: vừa mã hóa vừa xác thực (có authentication tag), an toàn hơn
+
+---
+
+## 6. Tests
+
+Repo bao gồm các test:
+
+* DES sample test
+* Encrypt/Decrypt round-trip
+* Multi-block + padding
+* Tamper test (negative)
+* Wrong key test (negative)
+
+---
+
+## 7. Logs
+
+Thư mục `logs/` chứa minh chứng chạy chương trình:
+
+* output thực tế
+* test cases
+* kết quả đúng/sai
+
+---
+
+## 8. Ethics & Safe Use
+
+* Chỉ dùng cho mục đích học tập
+* Không sử dụng cho hệ thống thực tế
+* Không dùng để tấn công hoặc khai thác
+* Nếu tham khảo tài liệu/AI cần ghi nguồn
+
+---
+
+## 9. Summary
+
+* Đã triển khai DES và TripleDES
+* Hỗ trợ encrypt/decrypt
+* Hỗ trợ multi-block và padding
+* Có test và log minh chứng đầy đủ
