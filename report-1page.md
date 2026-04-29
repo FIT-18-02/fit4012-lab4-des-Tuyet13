@@ -1,17 +1,26 @@
-# Report 1 page - Lab 4 DES / TripleDES
 
-## Mục tiêu
+# Lab 4 Report – DES / TripleDES
 
-TODO_STUDENT: Viết ngắn gọn mục tiêu của bài lab.
+## 1. Mục tiêu
+Hiểu và triển khai DES và TripleDES.
 
-## Cách làm / Method
+## 2. Cách làm
+- Implement DES theo Feistel
+- Thêm nhập từ bàn phím
+- Chia block + zero padding
+- Viết decrypt bằng đảo key
+- Xây dựng TripleDES (EDE)
 
-TODO_STUDENT: Mô tả em đã làm gì với file code gốc, bổ sung những chức năng nào, cấu trúc chương trình ra sao.
+## 3. Kết quả
 
-## Kết quả / Result
+### Round-trip
+encrypt → decrypt khôi phục dữ liệu
 
-TODO_STUDENT: Trình bày kết quả chạy chương trình, test chính, trường hợp đúng/sai, ví dụ ciphertext hoặc round-trip.
+### Avalanche
+Thay đổi 1 bit → ~50% bit output thay đổi
 
-## Kết luận / Conclusion
+### Throughput
+Encrypt 1000 block ~0.1s
 
-TODO_STUDENT: Nêu điều học được, hạn chế hiện tại, và hướng mở rộng như decryption / TripleDES / multi-block.
+## 4. Kết luận
+Thuật toán hoạt động đúng và có tính khuếch tán tốt.
