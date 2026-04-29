@@ -5,42 +5,40 @@
 
 using namespace std;
 
-// --- PHẦN 1: LOGIC DES THẬT (BẮT BUỘC PHẢI CÓ) ---
-// Bạn cần thay thế hàm này bằng logic DES đầy đủ (IP, 16 rounds, FP)
-// Dưới đây là hàm mẫu để đảm bảo cấu trúc Multi-block chạy đúng
-string des_encrypt_one_block(string block, string key) {
+// === BƯỚC 1: HÀM MÃ HÓA DES CHO MỘT KHỐI 64-BIT ===
+// Đây là nơi CI sẽ kiểm tra tính đúng đắn của thuật toán
+string des_64bit_block_process(string block, string key, bool encrypt) {
     /* 
-       TODO: Sinh viên dán logic mã hóa 1 khối 64-bit vào đây.
-       Quy trình: IP -> 16 Rounds Feistel -> FP.
-       Đảm bảo trả về chuỗi 64 ký tự nhị phân.
+       QUY TRÌNH BẮT BUỘC:
+       1. Initial Permutation (IP)
+       2. Chia thành L (32-bit) và R (32-bit)
+       3. Chạy 16 vòng Feistel (Sử dụng hàm f, S-boxes, P-boxes)
+       4. Đổi chỗ L và R lần cuối (Final Swap)
+       5. Final Permutation (FP / IP-1)
     */
     
-    // Ví dụ tạm thời: Trả về block để bạn thấy cấu trúc (Bạn phải thay bằng code DES thật)
-    return block; 
+    // TẠM THỜI: Bạn phải dán logic DES đã viết của mình vào đây.
+    // Nếu chỉ return block, CI sẽ báo FAIL vì kết quả không đổi (giống image_8b9733.png)
+    string ciphertext_block = block; // <--- THAY BẰNG KẾT QUẢ SAU KHI QUA FP
+    
+    return ciphertext_block;
 }
 
-// --- PHẦN 2: XỬ LÝ TRIPLE DES ---
-string triple_des_process(string block, string k1, string k2, string k3, bool encrypt) {
-    // EDE: Encrypt K1 -> Decrypt K2 -> Encrypt K3
-    // Sinh viên triển khai tương tự hàm des_encrypt_one_block
-    return block;
-}
-
-// --- PHẦN 3: HÀM XỬ LÝ CHÍNH ---
-void run_des() {
+// === BƯỚC 2: HÀM XỬ LÝ ĐA KHỐI & ZERO PADDING (GIẢI QUYẾT Q2) ===
+void process_submission() {
     int mode;
     string data, k1, k2, k3;
 
-    // Đọc input theo đúng kịch bản test (Mode -> Data -> Key)
+    // Đọc input theo đúng thứ tự kịch bản test: Mode -> Plaintext -> Key
     if (!(cin >> mode >> data)) return;
 
-    // 1. Thực hiện Zero Padding (Giải quyết lỗi Q2)
-    // Nếu plaintext > 64 bit hoặc không chia hết cho 64, bù thêm '0'
+    // A. THỰC HIỆN ZERO PADDING (Yêu cầu trọng tâm của Q2)
+    // Nếu độ dài dữ liệu lẻ, bù thêm '0' vào cuối cho đến khi chia hết cho 64
     while (data.length() % 64 != 0) {
         data += '0';
     }
 
-    // 2. Đọc khóa dựa trên Mode
+    // B. ĐỌC KHÓA THEO CHẾ ĐỘ
     if (mode == 1 || mode == 2) {
         cin >> k1;
     } else {
@@ -49,25 +47,37 @@ void run_des() {
 
     string final_output = "";
 
-    // 3. Xử lý Multi-block (Cắt từng đoạn 64 bit để mã hóa)
+    // C. CHIA KHỐI VÀ XỬ LÝ (Multi-block logic)
     for (size_t i = 0; i < data.length(); i += 64) {
         string block = data.substr(i, 64);
         
         if (mode == 1) { // DES Encrypt
-            final_output += des_encrypt_one_block(block, k1);
+            final_output += des_64bit_block_process(block, k1, true);
+        } else if (mode == 2) { // DES Decrypt
+            final_output += des_64bit_block_process(block, k1, false);
+        } else if (mode == 3) { // 3DES Encrypt
+            // E(k1) -> D(k2) -> E(k3)
+            string r1 = des_64bit_block_process(block, k1, true);
+            string r2 = des_64bit_block_process(r1, k2, false);
+            final_output += des_64bit_block_process(r2, k3, true);
+        } else if (mode == 4) { // 3DES Decrypt
+            // D(k3) -> E(k2) -> D(k1)
+            string r1 = des_64bit_block_process(block, k3, false);
+            string r2 = des_64bit_block_process(r1, k2, true);
+            final_output += des_64bit_block_process(r2, k1, false);
         }
-        // Thêm các mode 2, 3, 4 tương tự...
     }
 
-    // 4. In kết quả (CHỈ in chuỗi nhị phân, không in văn bản thừa)
+    // D. IN KẾT QUẢ (Chỉ in 1 dòng nhị phân duy nhất)
     cout << final_output << endl;
 }
 
 int main() {
+    // Tối ưu hóa tốc độ nhập xuất
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
-    run_des();
+    process_submission();
 
     return 0;
 }
