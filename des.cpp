@@ -117,7 +117,7 @@ int S[8][4][16] = {
 }
 };
 
-// --- HELPER ---
+// helper
 string permute(string in, int* table, int n) {
     string out = "";
     for (int i = 0; i < n; i++) out += in[table[i]-1];
@@ -126,9 +126,8 @@ string permute(string in, int* table, int n) {
 
 string shift_left(string k, int shifts) {
     rotate(k.begin(), k.begin() + shifts, k.end());
-return k;
+    return k;
 }
-
 vector<string> generate_keys(string key) {
     vector<string> round_keys;
     key = permute(key, PC1, 56);
@@ -157,7 +156,7 @@ string sbox(string in) {
     return out;
 }
 
-// --- DES CORE ---
+// DES
 string des_unit(string block, string key, bool encrypt) {
     vector<string> keys = generate_keys(key);
     if (!encrypt) reverse(keys.begin(), keys.end());
@@ -180,7 +179,7 @@ string des_unit(string block, string key, bool encrypt) {
     return permute(combined, FP, 64);
 }
 
-// --- MULTI BLOCK ---
+// multi-block
 string process_multi_block(string data, string key, int mode) {
     while (data.length() % 64 != 0) data += '0';
 
@@ -193,16 +192,41 @@ string process_multi_block(string data, string key, int mode) {
     return res;
 }
 
-// --- MAIN ---
+// main
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
     int mode;
-    string data, key;
+    string data, k1, k2, k3;
 
-    if (!(cin >> mode >> data >> key)) return 0;
+    if (!(cin >> mode >> data)) return 0;
 
-    cout << process_multi_block(data, key, mode) << endl;
+    if (mode == 1 || mode == 2) {
+        cin >> k1;
+        cout << process_multi_block(data, k1, mode) << endl;
+    } 
+    else if (mode == 3 || mode == 4) {
+        cin >> k1 >> k2 >> k3;
+
+        while (data.length() % 64 != 0) data += '0';
+
+        string res = "";
+        for (size_t i = 0; i < data.length(); i += 64) {
+            string block = data.substr(i, 64);
+
+            if (mode == 3) {
+                string t = des_unit(block, k1, true);
+                t = des_unit(t, k2, false);
+                res += des_unit(t, k3, true);
+            } else {
+                string t = des_unit(block, k3, false);
+                t = des_unit(t, k2, true);
+                res += des_unit(t, k1, false);
+            }
+        }
+        cout << res << endl;
+    }
+
     return 0;
 }
