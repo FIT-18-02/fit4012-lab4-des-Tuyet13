@@ -1,74 +1,74 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm> // Sửa lỗi trong hình image_8b9e7b.png: Cần thư viện này để dùng hàm reverse
+#include <algorithm> // Sửa lỗi 'reverse' not declared (image_8b9e7b.png)
 
 using namespace std;
 
-// --- PHẦN 1: CÁC HÀM TIỆN ÍCH ---
-
-// Đảo ngược chuỗi bit
-string reverseBits(string s) {
-    reverse(s.begin(), s.end()); // Hàm reverse nằm trong thư viện <algorithm>
-    return s;
-}
-
-// --- PHẦN 2: LOGIC DES CỐT LÕI ---
-// Sinh viên dán logic IP, Feistel, KeyGenerator... thực tế vào đây.
+// --- PHẦN 1: LOGIC DES CỐT LÕI (IP -> 16 Rounds -> FP) ---
+// Bạn hãy đảm bảo hàm này xử lý đúng logic DES cho MỘT khối 64-bit
 string des_logic_core(string block, string key, bool encrypt) {
-    // Placeholder: Hàm này phải xử lý đúng 1 khối 64-bit
-    // logic của bạn: IP -> 16 rounds -> FP
+    // TODO: Dán logic IP, 16 vòng Feistel và FP của bạn vào đây
+    // Tạm thời trả về block để demo cấu trúc đa khối
     return block; 
 }
 
-// --- PHẦN 3: XỬ LÝ ĐA KHỐI & PADDING (Sửa lỗi Q2 trong image_8bf1c7.png) ---
+// --- PHẦN 2: XỬ LÝ TRIPLE DES (3DES) ---
+// Quy trình: Encrypt K1 -> Decrypt K2 -> Encrypt K3 (cho mã hóa)
+string triple_des_block(string block, string k1, string k2, string k3, bool encrypt) {
+    if (encrypt) {
+        string res = des_logic_core(block, k1, true);
+        res = des_logic_core(res, k2, false);
+        return des_logic_core(res, k3, true);
+    } else {
+        string res = des_logic_core(block, k3, false);
+        res = des_logic_core(res, k2, true);
+        return des_logic_core(res, k1, false);
+    }
+}
 
-string process_multi_block(string data, string key, int mode) {
-    // 1. Thực hiện Zero Padding (Q2 yêu cầu)
-    // Nếu độ dài không chia hết cho 64, bù thêm ký tự '0' vào cuối
+// --- PHẦN 3: XỬ LÝ ĐA KHỐI & PADDING (Giải quyết triệt để Q2) ---
+void solve() {
+    int mode;
+    string data, k1, k2, k3;
+
+    // Đọc input theo đúng Submission Contract
+    if (!(cin >> mode >> data)) return;
+
+    // 1. Thực hiện Zero Padding ngay lập tức cho chuỗi data
     while (data.length() % 64 != 0) {
         data += '0';
     }
 
-    string final_result = "";
-    bool is_encrypt = (mode == 1 || mode == 3);
+    // 2. Đọc khóa dựa trên Mode
+    if (mode == 1 || mode == 2) {
+        cin >> k1;
+    } else {
+        cin >> k1 >> k2 >> k3;
+    }
 
-    // 2. Chia thành từng khối 64-bit để mã hóa/giải mã
+    string final_result = "";
+
+    // 3. Vòng lặp chia khối (Multi-block logic)
     for (size_t i = 0; i < data.length(); i += 64) {
         string block = data.substr(i, 64);
         
-        if (mode == 1 || mode == 2) {
-            // DES đơn
-            final_result += des_logic_core(block, key, is_encrypt);
-        }
+        if (mode == 1)      final_result += des_logic_core(block, k1, true);
+        else if (mode == 2) final_result += des_logic_core(block, k1, false);
+        else if (mode == 3) final_result += triple_des_block(block, k1, k2, k3, true);
+        else if (mode == 4) final_result += triple_des_block(block, k1, k2, k3, false);
     }
-    return final_result;
+
+    // 4. CHỈ in ra chuỗi nhị phân kết quả, không in chữ thừa
+    cout << final_result << endl;
 }
 
 int main() {
-    // Tăng tốc nhập xuất để tránh lỗi time-limit trên CI
+    // Tăng tốc độ nhập xuất
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
-    int mode;
-    string data, key, k1, k2, k3;
-
-    // Đọc đầu vào theo đúng "Submission Contract"
-    if (!(cin >> mode)) return 0;
-    if (!(cin >> data)) return 0;
-
-    if (mode == 1 || mode == 2) {
-        cin >> key;
-        cout << process_multi_block(data, key, mode) << endl;
-    } 
-    else if (mode == 3 || mode == 4) {
-        cin >> k1 >> k2 >> k3;
-        // Logic TripleDES: E(K1) -> D(K2) -> E(K3)
-        // Áp dụng process_multi_block tương tự cho 3 bước
-        string res = data;
-        // Thực hiện tuần tự các bước 3DES cho toàn bộ chuỗi data đã pad
-        // ... (Sinh viên triển khai logic TripleDES tại đây)
-    }
+    solve();
 
     return 0;
 }
