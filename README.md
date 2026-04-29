@@ -1,14 +1,14 @@
 # DES / TripleDES Implementation – FIT4012 Lab 4
 
-## 1. How to run
+## 1. How to run / Cách chạy
 
-### Compile
+### Compile / Biên dịch
 
 ```bash
 g++ -std=c++17 -Wall -Wextra -pedantic des.cpp -o des
 ```
 
-### Run
+### Run / Chạy chương trình
 
 ```bash
 ./des
@@ -18,7 +18,7 @@ g++ -std=c++17 -Wall -Wextra -pedantic des.cpp -o des
 
 ## 2. Input / Đầu vào
 
-Chương trình nhận dữ liệu từ **stdin** theo chế độ (mode):
+Chương trình nhận dữ liệu từ bàn phím (stdin) theo mode:
 
 ```
 1 = DES encrypt  
@@ -27,88 +27,53 @@ Chương trình nhận dữ liệu từ **stdin** theo chế độ (mode):
 4 = TripleDES decrypt  
 ```
 
-### Mode 1: DES encrypt
+### Mode 1 (DES encrypt)
 
-Nhập:
+* plaintext: chuỗi nhị phân (có thể dài > 64 bit)
+* key: chuỗi nhị phân 64-bit
 
-* plaintext (chuỗi nhị phân, có thể dài hơn 64 bit)
-* key (64 bit)
+### Mode 2 (DES decrypt)
 
-Chương trình sẽ:
+* ciphertext: chuỗi nhị phân
+* key: chuỗi nhị phân 64-bit
 
-* chia plaintext thành các block 64 bit
-* block cuối nếu thiếu sẽ được **zero padding**
+### Mode 3 (TripleDES encrypt)
 
----
+* plaintext: 64 bit
+* K1, K2, K3: key 64-bit
 
-### Mode 2: DES decrypt
+### Mode 4 (TripleDES decrypt)
 
-Nhập:
-
-* ciphertext (chuỗi nhị phân)
-* key (64 bit)
-
-Chương trình sẽ:
-
-* giải mã bằng DES
-* sử dụng round keys đảo ngược
-
----
-
-### Mode 3: TripleDES encrypt
-
-Nhập:
-
-* plaintext (64 bit)
-* K1, K2, K3 (mỗi key 64 bit)
-
-Thực hiện:
-
-```
-Ciphertext = E(K3, D(K2, E(K1, Plaintext)))
-```
-
----
-
-### Mode 4: TripleDES decrypt
-
-Nhập:
-
-* ciphertext (64 bit)
+* ciphertext: 64 bit
 * K1, K2, K3
-
-Thực hiện:
-
-```
-Plaintext = D(K1, E(K2, D(K3, Ciphertext)))
-```
 
 ---
 
 ## 3. Output / Đầu ra
 
-* In ra kết quả cuối cùng (ciphertext hoặc plaintext)
-* Dạng chuỗi nhị phân
-* Có thể in thêm thông tin trung gian nhưng kết quả cuối phải rõ ràng
+* In ra kết quả cuối cùng dưới dạng chuỗi nhị phân
+* Không chứa ký tự không hợp lệ
+* Có thể có thông tin trung gian nhưng kết quả cuối phải rõ ràng
 
 ---
 
 ## 4. Padding
 
-* Sử dụng **zero padding**
-* Nếu block cuối < 64 bit → thêm '0' cho đủ
+Chương trình sử dụng **zero padding**:
+
+* Nếu plaintext không chia hết cho 64 bit
+* Block cuối sẽ được thêm các bit `0` cho đủ 64 bit
 
 Ví dụ:
 
 ```
-Input: 10101
-→ 101010000000000000... (đủ 64 bit)
+10101 → 101010000000000... (đủ 64 bit)
 ```
 
 ### Hạn chế:
 
-* Không phân biệt được đâu là dữ liệu thật và đâu là padding
-* Không an toàn trong hệ thống thực tế
+* Không phân biệt được dữ liệu thật và padding
+* Không phù hợp cho hệ thống bảo mật thực tế
 
 ---
 
@@ -116,60 +81,56 @@ Input: 10101
 
 ### IV / Nonce
 
-IV (Initialization Vector) hoặc nonce cần **duy nhất (unique)** cho mỗi lần mã hóa.
-Nếu tái sử dụng IV/nonce, attacker có thể suy ra thông tin từ ciphertext.
-
----
+IV (Initialization Vector) hoặc nonce phải **unique (duy nhất)** cho mỗi lần mã hóa.
+Nếu tái sử dụng, attacker có thể suy ra thông tin từ ciphertext.
 
 ### Padding
 
-Padding cần thiết khi dùng block cipher như DES (CBC mode) vì dữ liệu phải chia hết block.
-Nếu xử lý padding sai có thể dẫn đến lỗi hoặc bị khai thác (padding oracle attack).
+Padding cần thiết trong block cipher để đảm bảo dữ liệu chia hết block.
+Sai padding có thể gây lỗi hoặc bị khai thác.
 
----
+### CBC / CTR / GCM
 
-### CBC / CTR / GCM (cơ bản)
-
-* **CBC**: dùng IV, an toàn hơn ECB nhưng cần padding
-* **CTR**: biến block cipher thành stream cipher, không cần padding
-* **GCM**: vừa mã hóa vừa xác thực (có authentication tag), an toàn hơn
+* CBC: cần IV và padding
+* CTR: không cần padding
+* GCM: có authentication tag đảm bảo toàn vẹn dữ liệu
 
 ---
 
 ## 6. Tests
 
-Repo bao gồm các test:
+Thư mục `tests/` bao gồm:
 
 * DES sample test
-* Encrypt/Decrypt round-trip
-* Multi-block + padding
-* Tamper test (negative)
-* Wrong key test (negative)
+* encrypt/decrypt round-trip
+* multi-block padding
+* tamper test
+* wrong key test
 
 ---
 
 ## 7. Logs
 
-Thư mục `logs/` chứa minh chứng chạy chương trình:
+Thư mục `logs/` chứa:
 
-* output thực tế
-* test cases
+* output chạy chương trình
+* test case minh chứng
 * kết quả đúng/sai
 
 ---
 
 ## 8. Ethics & Safe Use
 
-* Chỉ dùng cho mục đích học tập
-* Không sử dụng cho hệ thống thực tế
-* Không dùng để tấn công hoặc khai thác
-* Nếu tham khảo tài liệu/AI cần ghi nguồn
+* Chỉ sử dụng cho mục đích học tập
+* Không dùng trong hệ thống thực tế
+* Không sử dụng để tấn công
+* Tuân thủ đạo đức và an toàn thông tin
 
 ---
 
 ## 9. Summary
 
-* Đã triển khai DES và TripleDES
+* Implement DES và TripleDES
 * Hỗ trợ encrypt/decrypt
-* Hỗ trợ multi-block và padding
-* Có test và log minh chứng đầy đủ
+* Hỗ trợ multi-block + zero padding
+* Có test và logs minh chứng đầy đủ
